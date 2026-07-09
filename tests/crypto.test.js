@@ -1,11 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { encryptText, decryptText } from '../js/crypto.js';
-import { webcrypto } from 'node:crypto';
 
 // Shim browser environment for Node.js
-globalThis.crypto = webcrypto;
-globalThis.TextEncoder = require('util').TextEncoder;
-globalThis.TextDecoder = require('util').TextDecoder;
+// Node.js 19+ already has globalThis.crypto, TextEncoder, and TextDecoder.
 globalThis.window = {
     btoa: (str) => Buffer.from(str, 'binary').toString('base64'),
     atob: (b64) => Buffer.from(b64, 'base64').toString('binary')
