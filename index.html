@@ -389,29 +389,29 @@
         }
 
         async function decryptText(cipherB64, passphrase) {
-            let data;
             try {
-                data = new Uint8Array(base64ToArrayBuffer(cipherB64));
-            } catch (e) {
-                throw new Error('INVALID_FORMAT');
-            }
+                let data;
+                try {
+                    data = new Uint8Array(base64ToArrayBuffer(cipherB64));
+                } catch (e) {
+                    throw new Error('INVALID_FORMAT');
+                }
 
-            if (data.length < 1 + SALT_SIZE + IV_SIZE) {
-                throw new Error('INVALID_FORMAT');
-            }
+                if (data.length < 1 + SALT_SIZE + IV_SIZE) {
+                    throw new Error('INVALID_FORMAT');
+                }
 
-            const version = data[0];
-            if (version !== VERSION) {
-                throw new Error('UNSUPPORTED_VERSION');
-            }
+                const version = data[0];
+                if (version !== VERSION) {
+                    throw new Error('UNSUPPORTED_VERSION');
+                }
 
-            const salt = data.slice(1, 1 + SALT_SIZE);
-            const iv = data.slice(1 + SALT_SIZE, 1 + SALT_SIZE + IV_SIZE);
-            const ciphertext = data.slice(1 + SALT_SIZE + IV_SIZE);
+                const salt = data.slice(1, 1 + SALT_SIZE);
+                const iv = data.slice(1 + SALT_SIZE, 1 + SALT_SIZE + IV_SIZE);
+                const ciphertext = data.slice(1 + SALT_SIZE + IV_SIZE);
 
-            const key = await deriveKey(passphrase, salt);
+                const key = await deriveKey(passphrase, salt);
 
-            try {
                 const decrypted = await crypto.subtle.decrypt(
                     { name: 'AES-GCM', iv: iv },
                     key,
@@ -421,6 +421,9 @@
                 const decoder = new TextDecoder();
                 return decoder.decode(decrypted);
             } catch (e) {
+                if (e.message === 'INVALID_FORMAT' || e.message === 'UNSUPPORTED_VERSION') {
+                    throw e;
+                }
                 throw new Error('DECRYPTION_FAILED');
             }
         }
@@ -484,6 +487,7 @@
         function showMsg(el, text, type) {
             el.textContent = text;
             el.className = 'message ' + type;
+            el.style.display = 'block';
             if (type === 'success') {
                 setTimeout(() => { el.style.display = 'none'; }, 3000);
             }
