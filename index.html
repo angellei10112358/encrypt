@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:;">
+    <title>Secure Text Encryptor</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --error-color: #ef4444;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg-color);
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--primary-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 16px; /* Prevent iOS zoom */
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            ring: 2px var(--primary-color);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .strength-container {
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .strength-bar {
+            height: 4px;
+            flex-grow: 1;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+        .strength-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+            color: var(--text-muted);
+        }
+
+        .output-container {
+            margin-top: 1.5rem;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--border-color);
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            display: none;
+            text-align: center;
+        }
+
+        .message.error {
+            display: block;
+            background-color: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fee2e2;
+        }
+
+        .message.success {
+            display: block;
+            background-color: #f0fdf4;
+            color: var(--success-color);
+            border: 1px solid #dcfce7;
+        }
+
+        .instructions {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .instructions ul {
+            padding-left: 1.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .instructions li {
+            margin-bottom: 0.25rem;
+        }
+
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #ffffff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Secure Text Encryptor</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="encrypt-tab">Encrypt</button>
+        <button class="tab-btn" id="decrypt-tab">Decrypt</button>
+    </div>
+
+    <div id="encrypt-section" class="section active">
+        <div class="form-group">
+            <label for="encrypt-plain">Plaintext</label>
+            <textarea id="encrypt-plain" placeholder="Enter text to encrypt..."></textarea>
+        </div>
+        <div class="form-group">
+            <label for="encrypt-pass">Passphrase</label>
+            <input type="password" id="encrypt-pass" autocomplete="off" placeholder="Enter secret passphrase...">
+            <div class="strength-container">
+                <div class="strength-bar"><div id="encrypt-strength-fill" class="strength-fill"></div></div>
+                <span id="encrypt-strength-text" class="strength-text">Strength: -</span>
+            </div>
+        </div>
+        <button id="encrypt-btn" class="btn">
+            <span id="encrypt-btn-text">Encrypt</span>
+        </button>
+        <div id="encrypt-msg" class="message"></div>
+        <div class="output-container">
+            <label for="encrypt-cipher">Ciphertext</label>
+            <button id="encrypt-copy-btn" class="copy-btn">Copy</button>
+            <textarea id="encrypt-cipher" readonly placeholder="Encrypted text will appear here..."></textarea>
+        </div>
+    </div>
+
+    <div id="decrypt-section" class="section">
+        <div class="form-group">
+            <label for="decrypt-cipher">Ciphertext</label>
+            <textarea id="decrypt-cipher" placeholder="Paste encrypted text here..."></textarea>
+        </div>
+        <div class="form-group">
+            <label for="decrypt-pass">Passphrase</label>
+            <input type="password" id="decrypt-pass" autocomplete="off" placeholder="Enter secret passphrase...">
+            <div class="strength-container">
+                <div class="strength-bar"><div id="decrypt-strength-fill" class="strength-fill"></div></div>
+                <span id="decrypt-strength-text" class="strength-text">Strength: -</span>
+            </div>
+        </div>
+        <button id="decrypt-btn" class="btn">
+            <span id="decrypt-btn-text">Decrypt</span>
+        </button>
+        <div id="decrypt-msg" class="message"></div>
+        <div class="output-container">
+            <label for="decrypt-plain">Plaintext</label>
+            <textarea id="decrypt-plain" readonly placeholder="Decrypted text will appear here..."></textarea>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <strong>Security Tips:</strong>
+        <ul>
+            <li>Passphrases are processed locally. Your data never leaves your device.</li>
+            <li><strong>Important:</strong> Send the ciphertext and the passphrase through <em>different channels</em> (e.g., email for ciphertext, signal/phone for passphrase).</li>
+            <li>Use a long passphrase consisting of several random words for better security.</li>
+            <li>This tool is a single-file application. You can save it and use it offline.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const PBKDF2_ITERATIONS = 600000;
+        const SALT_SIZE = 16;
+        const IV_SIZE = 12;
+        const VERSION = 0x01;
+
+        // DOM elements
+        const encryptTab = document.getElementById('encrypt-tab');
+        const decryptTab = document.getElementById('decrypt-tab');
+        const encryptSection = document.getElementById('encrypt-section');
+        const decryptSection = document.getElementById('decrypt-section');
+
+        const encryptPlain = document.getElementById('encrypt-plain');
+        const encryptPass = document.getElementById('encrypt-pass');
+        const encryptBtn = document.getElementById('encrypt-btn');
+        const encryptCipher = document.getElementById('encrypt-cipher');
+        const encryptMsg = document.getElementById('encrypt-msg');
+        const encryptStrengthFill = document.getElementById('encrypt-strength-fill');
+        const encryptStrengthText = document.getElementById('encrypt-strength-text');
+        const encryptCopyBtn = document.getElementById('encrypt-copy-btn');
+
+        const decryptCipher = document.getElementById('decrypt-cipher');
+        const decryptPass = document.getElementById('decrypt-pass');
+        const decryptBtn = document.getElementById('decrypt-btn');
+        const decryptPlain = document.getElementById('decrypt-plain');
+        const decryptMsg = document.getElementById('decrypt-msg');
+        const decryptStrengthFill = document.getElementById('decrypt-strength-fill');
+        const decryptStrengthText = document.getElementById('decrypt-strength-text');
+
+        // Tab Switching
+        encryptTab.onclick = () => {
+            encryptTab.classList.add('active');
+            decryptTab.classList.remove('active');
+            encryptSection.classList.add('active');
+            decryptSection.classList.remove('active');
+        };
+        decryptTab.onclick = () => {
+            decryptTab.classList.add('active');
+            encryptTab.classList.remove('active');
+            decryptSection.classList.add('active');
+            encryptSection.classList.remove('active');
+        };
+
+        // Password Strength Indicator
+        function updateStrength(pass, fillEl, textEl) {
+            let strength = 0;
+            if (pass.length > 0) strength = 1;
+            if (pass.length >= 8) strength = 2;
+            if (pass.length >= 12 && /[A-Z]/.test(pass) && /[0-9]/.test(pass)) strength = 3;
+            if (pass.length >= 16 && /[A-Z]/.test(pass) && /[0-9]/.test(pass) && /[^A-Za-z0-9]/.test(pass)) strength = 4;
+
+            const colors = ['#e2e8f0', '#ef4444', '#f59e0b', '#22c55e', '#16a34a'];
+            const labels = ['-', 'Weak', 'Fair', 'Strong', 'Very Strong'];
+            
+            fillEl.style.width = (strength * 25) + '%';
+            fillEl.style.backgroundColor = colors[strength];
+            textEl.textContent = 'Strength: ' + labels[strength];
+        }
+
+        encryptPass.oninput = () => updateStrength(encryptPass.value, encryptStrengthFill, encryptStrengthText);
+        decryptPass.oninput = () => updateStrength(decryptPass.value, decryptStrengthFill, decryptStrengthText);
+
+        // Utility: Base64 encoding/decoding
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        async function deriveKey(passphrase, salt) {
+            const encoder = new TextEncoder();
+            const baseKey = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(passphrase),
+                'PBKDF2',
+                false,
+                ['deriveKey']
+            );
+
+            return crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: PBKDF2_ITERATIONS,
+                    hash: 'SHA-256'
+                },
+                baseKey,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        function showMsg(el, text, type) {
+            el.textContent = text;
+            el.className = 'message ' + type;
+            if (type === 'success') {
+                setTimeout(() => { el.style.display = 'none'; }, 3000);
+            }
+        }
+
+        async function setBtnLoading(btn, textEl, isLoading) {
+            if (isLoading) {
+                btn.disabled = true;
+                textEl.innerHTML = '<span class="loader"></span> Processing...';
+            } else {
+                btn.disabled = false;
+                textEl.textContent = btn.id === 'encrypt-btn' ? 'Encrypt' : 'Decrypt';
+            }
+        }
+
+        // Encryption Logic
+        encryptBtn.onclick = async () => {
+            const plain = encryptPlain.value;
+            const pass = encryptPass.value;
+            encryptMsg.style.display = 'none';
+            encryptCipher.value = '';
+
+            if (!plain || !pass) {
+                showMsg(encryptMsg, 'Please enter both plaintext and passphrase.', 'error');
+                return;
+            }
+
+            const btnText = document.getElementById('encrypt-btn-text');
+            await setBtnLoading(encryptBtn, btnText, true);
+
+            try {
+                const salt = crypto.getRandomValues(new Uint8Array(SALT_SIZE));
+                const iv = crypto.getRandomValues(new Uint8Array(IV_SIZE));
+                const key = await deriveKey(pass, salt);
+                
+                const encoder = new TextEncoder();
+                const encrypted = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    encoder.encode(plain)
+                );
+
+                const result = new Uint8Array(1 + SALT_SIZE + IV_SIZE + encrypted.byteLength);
+                result[0] = VERSION;
+                result.set(salt, 1);
+                result.set(iv, 1 + SALT_SIZE);
+                result.set(new Uint8Array(encrypted), 1 + SALT_SIZE + IV_SIZE);
+
+                encryptCipher.value = arrayBufferToBase64(result.buffer);
+            } catch (e) {
+                console.error(e);
+                showMsg(encryptMsg, 'An unexpected error occurred during encryption.', 'error');
+            } finally {
+                await setBtnLoading(encryptBtn, btnText, false);
+            }
+        };
+
+        // Decryption Logic
+        decryptBtn.onclick = async () => {
+            const cipherB64 = decryptCipher.value;
+            const pass = decryptPass.value;
+            decryptMsg.style.display = 'none';
+            decryptPlain.value = '';
+
+            if (!cipherB64 || !pass) {
+                showMsg(decryptMsg, 'Please enter both ciphertext and passphrase.', 'error');
+                return;
+            }
+
+            const btnText = document.getElementById('decrypt-btn-text');
+            await setBtnLoading(decryptBtn, btnText, true);
+
+            try {
+                let data;
+                try {
+                    data = new Uint8Array(base64ToArrayBuffer(cipherB64));
+                } catch (e) {
+                    throw new Error('INVALID_FORMAT');
+                }
+
+                if (data.length < 1 + SALT_SIZE + IV_SIZE) {
+                    throw new Error('INVALID_FORMAT');
+                }
+
+                const version = data[0];
+                if (version !== VERSION) {
+                    throw new Error('UNSUPPORTED_VERSION');
+                }
+
+                const salt = data.slice(1, 1 + SALT_SIZE);
+                const iv = data.slice(1 + SALT_SIZE, 1 + SALT_SIZE + IV_SIZE);
+                const ciphertext = data.slice(1 + SALT_SIZE + IV_SIZE);
+
+                const key = await deriveKey(pass, salt);
+
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    ciphertext
+                );
+
+                const decoder = new TextDecoder();
+                decryptPlain.value = decoder.decode(decrypted);
+            } catch (e) {
+                console.error(e);
+                if (e.message === 'INVALID_FORMAT' || e.message === 'UNSUPPORTED_VERSION') {
+                    showMsg(decryptMsg, 'Invalid ciphertext format.', 'error');
+                } else {
+                    // AES-GCM decryption failure (auth tag mismatch) or other
+                    showMsg(decryptMsg, 'Incorrect password or corrupted ciphertext.', 'error');
+                }
+            } finally {
+                await setBtnLoading(decryptBtn, btnText, false);
+            }
+        };
+
+        // Copy functionality
+        encryptCopyBtn.onclick = async () => {
+            if (!encryptCipher.value) return;
+            try {
+                await navigator.clipboard.writeText(encryptCipher.value);
+                const originalText = encryptCopyBtn.textContent;
+                encryptCopyBtn.textContent = 'Copied!';
+                encryptCopyBtn.style.color = 'var(--success-color)';
+                setTimeout(() => {
+                    encryptCopyBtn.textContent = originalText;
+                    encryptCopyBtn.style.color = '';
+                }, 2000);
+            } catch (e) {
+                showMsg(encryptMsg, 'Failed to copy text.', 'error');
+            }
+        };
+    })();
+</script>
+
+</body>
+</html>
