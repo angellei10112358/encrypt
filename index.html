@@ -411,14 +411,18 @@
 
             const key = await deriveKey(passphrase, salt);
 
-            const decrypted = await crypto.subtle.decrypt(
-                { name: 'AES-GCM', iv: iv },
-                key,
-                ciphertext
-            );
+            try {
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    ciphertext
+                );
 
-            const decoder = new TextDecoder();
-            return decoder.decode(decrypted);
+                const decoder = new TextDecoder();
+                return decoder.decode(decrypted);
+            } catch (e) {
+                throw new Error('DECRYPTION_FAILED');
+            }
         }
 
         // DOM elements
@@ -553,6 +557,8 @@
                     showMsg(decryptMsg, 'Decryption failed: Secure Context (HTTPS) is required for Web Crypto API.', 'error');
                 } else if (e.message === 'INVALID_FORMAT' || e.message === 'UNSUPPORTED_VERSION') {
                     showMsg(decryptMsg, 'Invalid ciphertext format.', 'error');
+                } else if (e.message === 'DECRYPTION_FAILED') {
+                    showMsg(decryptMsg, 'Incorrect password or corrupted ciphertext.', 'error');
                 } else {
                     showMsg(decryptMsg, 'Incorrect password or corrupted ciphertext.', 'error');
                 }

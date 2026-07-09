@@ -89,12 +89,16 @@ export async function decryptText(cipherB64, passphrase) {
 
     const key = await deriveKey(passphrase, salt);
 
-    const decrypted = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: iv },
-        key,
-        ciphertext
-    );
+    try {
+        const decrypted = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: iv },
+            key,
+            ciphertext
+        );
 
-    const decoder = new TextDecoder();
-    return decoder.decode(decrypted);
+        const decoder = new TextDecoder();
+        return decoder.decode(decrypted);
+    } catch (e) {
+        throw new Error('DECRYPTION_FAILED');
+    }
 }

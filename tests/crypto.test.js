@@ -22,7 +22,7 @@ describe('CryptoEngine', () => {
 
     it('should fail decryption with wrong passphrase', async () => {
         const cipher = await encryptText(plain, pass);
-        await expect(decryptText(cipher, 'wrong-pass')).rejects.toThrow('Incorrect password or corrupted ciphertext.');
+        await expect(decryptText(cipher, 'wrong-pass')).rejects.toThrow('DECRYPTION_FAILED');
     });
 
     it('should fail decryption with corrupted ciphertext', async () => {
