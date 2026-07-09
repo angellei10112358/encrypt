@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "vitest run",
-    "build": "mkdir -p dist && cp index.html dist/ && cp -r js dist/",
-    "deploy": "npm run build && npx wrangler deploy"
+    "test": "npx vitest run",
+    "build": "mkdir -p dist && cp index.html dist/ && cp -r js dist/"
   },
   "devDependencies": {
     "vitest": "^1.0.0"
